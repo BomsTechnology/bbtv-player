@@ -1,25 +1,34 @@
 {
   "expo": {
-    "name": "iptv",
-    "slug": "iptv",
+    "name": "bbTv player",
+    "slug": "bbtv-tv-player",
     "version": "1.0.0",
-    "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "iptv",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "orientation": "defoult",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "requireFullScreen": true,
+      "bundleIdentifier": "com.bomstechnology.iptv",
+      "usesNonExemptEncryption": false,
+      "icon": {
+        "dark": "./assets/icons/ios-dark.png",
+        "light": "./assets/icons/ios-light.png",
+        "tinded": "./assets/icons/ios-tinded.png"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/icons/adaptive-icon.png",
+        "monochromeImage": "./assets/icons/adaptive-icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.bomstechnology.iptv",
+      "permissions": []
     },
     "web": {
       "output": "static",
@@ -30,7 +39,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/icons/splash-icon-light.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -38,11 +47,24 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      "react-native-video",
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7ab01cde-bd9d-4114-961a-4e52e8cf8289"
+      }
     }
   }
 }
