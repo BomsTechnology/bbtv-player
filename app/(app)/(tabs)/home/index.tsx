@@ -1,13 +1,18 @@
-import PlaylistCard from "@/components/card/PlaylistCard";
 import EmptyData from "@/components/EmptyData";
+import PlaylistCard from "@/components/card/PlaylistCard";
 import SearchInput from "@/components/form/SearchInput";
 import { Colors, Fonts } from "@/constants/theme";
 import { usePlaylistStore } from "@/hooks/use-playliststore";
 import { useDebounce } from "@/hooks/useDebounce";
+import { groupPlaylistByCategory } from "@/hooks/usePlalist";
+import { playlistService } from "@/services/playlistService";
+import { MyCustomPlaylist } from "@/types/playlistType";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
+  Alert,
   FlatList,
   StyleSheet,
   TouchableOpacity,
@@ -15,23 +20,46 @@ import {
 } from "react-native";
 const HomeIndex = () => {
   const router = useRouter();
+  const { updatePlaylist } = usePlaylistStore();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const { data } = usePlaylistStore();
 
+  const fetchPlaylistByUrl = useMutation({
+    mutationFn: (url: string) => playlistService.getPlaylistByUrl(url),
+    onError: (error) => {
+      Alert.alert("Error", error.message);
+    }
+  });
+
+  const handleUpdate = async (playlist: MyCustomPlaylist) => {
+    const data = await fetchPlaylistByUrl.mutateAsync(playlist.url!)
+    const newPlaylist : MyCustomPlaylist = {
+      ...playlist,
+      items: groupPlaylistByCategory(data.items),
+      updatedAt: new Date().toISOString(),
+    }
+
+    updatePlaylist(playlist.id, newPlaylist)
+    Alert.alert("Success", "Playlist updated successfully");
+  }
+
+
+
   const filteredData = useMemo(() => {
     if (!debouncedSearch.trim()) return data;
     const searchLower = debouncedSearch.toLowerCase().trim();
-    return data.filter((playlist) =>
+    const ndata = data.filter((playlist) =>
       playlist.title.toLowerCase().includes(searchLower)
     );
+    return  ndata.reverse();
   }, [data, debouncedSearch]);
 
   return (
     <>
       <FlatList
         data={filteredData}
-        renderItem={({ item }) => <PlaylistCard playlist={item} />}
+        renderItem={({ item }) => <PlaylistCard loading={fetchPlaylistByUrl.isPending} onUpdate={() => handleUpdate(item)} playlist={item} />}
         keyExtractor={(item, index) => item.id.toString()}
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"

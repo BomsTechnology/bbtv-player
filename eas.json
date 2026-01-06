@@ -27,6 +27,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "marcelin.sigha@icloud.com",
+        "ascAppId": "6504210116",
+        "appleTeamId": "QJ28A22SBC"
+      }
+    }
   }
 }

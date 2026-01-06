@@ -1,14 +1,14 @@
 import parser, { Playlist } from 'iptv-playlist-parser';
-export interface CategoryChannel {
-  name: string;
-  items: string[];
-}
+
+const RELAY = 'https://first-worker.marcsigha.workers.dev/';
 
 export const playlistService = {
 
   async getPlaylistByUrl( url: string ): Promise<Playlist> {
     try {
-      const response = await fetch(url, {
+      const relayUrl = `${RELAY}?url=${url}`;
+      
+      const response = await fetch(relayUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/x-mpegURL, application/vnd.apple.mpegurl, text/plain, */*',
@@ -39,12 +39,11 @@ export const playlistService = {
       return data;
 
     } catch (error) {
-      throw new Error('Unknown error occurred while fetching playlist');
+      if (error.name === "AbortError") {
+        throw new Error("Playlist request timed out");
+      }
+      throw new Error(error?.message || "Failed to load playlist");
     }
-  },
-
-  getCategoryChannels: async (category: string): Promise<string[]> => {
-    return [];
   },
 
 }

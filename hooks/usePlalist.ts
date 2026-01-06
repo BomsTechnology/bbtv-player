@@ -1,80 +1,87 @@
-import { playlistService } from "@/services/playlistService";
 import { CategoryList } from "@/types/playlistType";
-import { useMutation } from "@tanstack/react-query";
 import { PlaylistItem } from "iptv-playlist-parser";
 
-export const useFetchPlaylistUrl = (url: string) => {
-    return useMutation({
-      mutationFn: () => playlistService.getPlaylistByUrl(url),
-      onSuccess: (data, variables, onMutateResult, context) => {
-        console.log(data);
-      },
-    });
+type Options = {
+  sortCategories?: boolean;
+  sortItems?: boolean;
+  defaultCategory?: string;
+  includeAll?: boolean;
+  categorySeparator?: string;
 };
-
 
 export const groupPlaylistByCategory = (
   items: PlaylistItem[],
-  options?: {
-    sortCategories?: boolean;
-    sortItems?: boolean;
-    defaultCategory?: string;
-    includeAll?: boolean; // ✅ Nouvelle option
-  }
+  options: Options = {}
 ): CategoryList[] => {
-  const { 
-    sortCategories = true, 
+  const {
+    sortCategories = true,
     sortItems = false,
-    defaultCategory = 'Other',
-    includeAll = true, // ✅ Par défaut, inclure "All"
-  } = options || {};
+    defaultCategory = "Other",
+    includeAll = true,
+    categorySeparator = ";",
+  } = options;
 
-  if (!items || items.length === 0) return [];
+  if (!items?.length) return [];
 
-  // Groupement par catégorie
-  const groupsMap = items.reduce((acc, item) => {
-    const categoryTitle = item.group?.title?.trim() || defaultCategory;
-    
-    if (!acc[categoryTitle]) {
-      acc[categoryTitle] = {
-        category: categoryTitle,
-        items: [],
-      };
+  const groupsMap = new Map<string, CategoryList>();
+  const allItems: PlaylistItem[] = [];
+
+  for (const item of items) {
+    allItems.push(item);
+
+    const raw = item.group?.title?.trim() || defaultCategory;
+
+    // FIX: split multi-categories correctly
+    const categories = raw
+      .split(categorySeparator)
+      .map(c => c.trim().toLowerCase())
+      .filter(Boolean);
+
+    const finalCategories = categories.length ? categories : [defaultCategory.toLowerCase()];
+
+    for (const category of finalCategories) {
+      let group = groupsMap.get(category);
+      if (!group) {
+        group = { category, items: [] };
+        groupsMap.set(category, group);
+      }
+      group.items?.push(item);
     }
-    
-    acc[categoryTitle].items?.push(item);
-    return acc;
-  }, {} as Record<string, CategoryList>);
+  }
 
-  let groups = Object.values(groupsMap);
+  let groups = Array.from(groupsMap.values());
 
-  // Tri des catégories
+  // Sort categories alphabetically (keep "other" last)
   if (sortCategories) {
-    groups = groups.sort((a, b) => {
-      // Met "Autre" à la fin
-      if (a.category === defaultCategory) return 1;
-      if (b.category === defaultCategory) return -1;
-      return a.category.localeCompare(b.category);
+    groups.sort((a, b) => {
+      if (a.category === defaultCategory.toLowerCase()) return 1;
+      if (b.category === defaultCategory.toLowerCase()) return -1;
+      return a.category.localeCompare(b.category, undefined, { sensitivity: "base" });
     });
   }
 
+  // Sort items inside categories
   if (sortItems) {
-    groups.forEach(group => {
-      group.items?.sort((a, b) => a.name.localeCompare(b.name));
-    });
+    for (const g of groups) {
+      g.items?.sort((a, b) =>
+        (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" })
+      );
+    }
   }
 
+  // Add "All" category safely
   if (includeAll) {
-    const allItems = sortItems 
-      ? [...items].sort((a, b) => a.name.localeCompare(b.name))
-      : items;
+    const all = sortItems
+      ? [...allItems].sort((a, b) =>
+          (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" })
+        )
+      : [...allItems];
 
     groups.unshift({
-      category: 'All',
-      items: allItems,
+      category: "All",
+      items: all,
     });
   }
 
   return groups;
 };
-

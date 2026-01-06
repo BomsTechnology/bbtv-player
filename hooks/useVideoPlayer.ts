@@ -50,13 +50,11 @@ export const useVideoPlayer = () => {
   const toggleOrientation = useCallback(async (orientation?: 'portrait' | 'landscape') => {
     try {
       if (state.isLandscape) {
-        // Passe en portrait
         setState(prev => ({ ...prev, isLandscape: false }));
         await ScreenOrientation.lockAsync(
           ScreenOrientation.OrientationLock.PORTRAIT
         );
       } else {
-        // Passe en paysage
         setState(prev => ({ ...prev, isLandscape: true }));
         await ScreenOrientation.lockAsync(
           ScreenOrientation.OrientationLock.LANDSCAPE
@@ -65,10 +63,8 @@ export const useVideoPlayer = () => {
     } catch (error) {
       console.log('Orientation toggle failed:', error);
       
-      // Rollback en cas d'erreur
       setState(prev => ({ ...prev, isLandscape: !prev.isLandscape }));
       
-      // Fallback: unlock
       try {
         await ScreenOrientation.unlockAsync();
       } catch (unlockError) {

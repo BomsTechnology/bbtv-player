@@ -7,7 +7,7 @@
     "scheme": "iptv",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "orientation": "defoult",
+    "orientation": "portrait",
     "ios": {
       "supportsTablet": true,
       "requireFullScreen": true,
@@ -17,6 +17,9 @@
         "dark": "./assets/icons/ios-dark.png",
         "light": "./assets/icons/ios-light.png",
         "tinded": "./assets/icons/ios-tinded.png"
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -52,7 +55,7 @@
       [
         "expo-screen-orientation",
         {
-          "initialOrientation": "DEFAULT"
+          "initialOrientation": "PORTRAIT"
         }
       ]
     ],
@@ -65,6 +68,12 @@
       "eas": {
         "projectId": "7ab01cde-bd9d-4114-961a-4e52e8cf8289"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7ab01cde-bd9d-4114-961a-4e52e8cf8289"
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -123,8 +123,8 @@ const PlayerControls = ({
             style={styles.orientationButton} 
             onPress={onToggleOrientation}
           >
-            <Ionicons 
-              name={isLandscape ? 'phone-portrait-outline' : 'phone-landscape-outline'} 
+            <MaterialCommunityIcons 
+              name="phone-rotate-portrait"
               size={24} 
               color="#fff" 
             />

@@ -123,6 +123,7 @@ const AddForm = () => {
               {
                 backgroundColor:
                   formFields.type === "upload" ? Colors.primary : Colors.light,
+                  display: 'none'
               },
             ]}
           >

@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const PlaylistCard = ({ playlist }: { playlist: MyCustomPlaylist }) => {
+const PlaylistCard = ({ playlist, onUpdate, loading }: { playlist: MyCustomPlaylist, onUpdate: () => void, loading: boolean }) => {
   const { setSelectedPlaylist, removePlaylist } = usePlaylistStore();
   const router = useRouter();
   const createDate = new Date(playlist.createdAt).toLocaleString("en-US", {
@@ -43,13 +43,17 @@ const PlaylistCard = ({ playlist }: { playlist: MyCustomPlaylist }) => {
         <View style={styles.container} >
           <TouchableOpacity onPress={handleSelectedPlaylist} style={styles.middleBlock}>
             <Text style={styles.title}>{playlist.title}</Text>
-            <Text style={styles.detail} numberOfLines={1}>
+            { loading ?
+            <Text style={styles.detail} numberOfLines={1}>loading...</Text>
+            :
+              (<Text style={styles.detail} numberOfLines={1}>
               Channels: {playlist.items[0]?.items?.length || 0} | Added: {createDate} 
               {updateDate && ` | Updated: ${updateDate}`}
-            </Text>
+            </Text>)
+            }
           </TouchableOpacity>
           <View style={styles.rightBlock}>
-            {playlist.type === "url" && <TouchableOpacity>
+            {playlist.type === "url" && <TouchableOpacity onPress={onUpdate}>
               <MaterialIcons name="refresh" color={Colors.text} size={24} />
             </TouchableOpacity>}
             <TouchableOpacity onPress={() => router.push(`/home/form/${playlist.id}`)}>

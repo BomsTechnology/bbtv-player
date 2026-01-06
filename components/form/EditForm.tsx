@@ -59,6 +59,7 @@ const EditForm = ({ playlist }: { playlist: MyCustomPlaylist }) => {
               {
                 backgroundColor:
                   formFields.type === "upload" ? Colors.primary : Colors.light,
+                  display: 'none'
               },
             ]}
           >

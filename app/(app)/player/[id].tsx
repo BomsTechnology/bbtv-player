@@ -1,6 +1,7 @@
 import VideoPlayer from '@/components/player/VideoPlayer';
 import { usePlaylistStore } from '@/hooks/use-playliststore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 export default function PlayerScreen() {
   const router = useRouter();
@@ -18,5 +19,15 @@ export default function PlayerScreen() {
     return null;
   }
 
-  return <VideoPlayer channel={channel} onClose={() => router.back()} />;
+  const handleClose = async () => {
+    try {
+      await ScreenOrientation.unlockAsync();
+    } catch (error) {
+      console.warn('Failed to unlock screen orientation:', error);
+    }
+    router.back();
+  
+  }
+
+  return <VideoPlayer channel={channel} onClose={handleClose} />;
 }
