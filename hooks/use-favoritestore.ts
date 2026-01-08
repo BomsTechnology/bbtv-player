@@ -14,6 +14,7 @@ interface FavoriteStore {
     addItem: (item: FavoriteItem) => void;
     removeItem: (id: string) => void;
     isFavorite: (tvgId: string, playlistId: string) => boolean;
+    clearByPlaylistId: (playlistId: string) => void;
     getData: () => FavoriteItem[]
 }
 
@@ -30,7 +31,12 @@ const useFavoriteStore = create<FavoriteStore>()(
             isFavorite: (tvgId: string, playlistId: string) => {
                 return get().data.some((item) => item.playlistId === playlistId && item.channel.tvg.id === tvgId);
             },
-            getData: () => get().data
+            getData: () => get().data,
+            clearByPlaylistId: (playlistId: string) => {
+                set((state) => ({ 
+                    data: state.data.filter((item) => item.playlistId !== playlistId) 
+                }));
+            },
         }),
         {
             name: 'favorite-store',

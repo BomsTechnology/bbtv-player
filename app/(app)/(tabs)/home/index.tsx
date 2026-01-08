@@ -14,8 +14,8 @@ import { useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
+  Pressable,
   StyleSheet,
-  TouchableOpacity,
   View
 } from "react-native";
 const HomeIndex = () => {
@@ -24,6 +24,7 @@ const HomeIndex = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const { data } = usePlaylistStore();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const fetchPlaylistByUrl = useMutation({
     mutationFn: (url: string) => playlistService.getPlaylistByUrl(url),
@@ -33,33 +34,47 @@ const HomeIndex = () => {
   });
 
   const handleUpdate = async (playlist: MyCustomPlaylist) => {
-    const data = await fetchPlaylistByUrl.mutateAsync(playlist.url!)
-    const newPlaylist : MyCustomPlaylist = {
-      ...playlist,
-      items: groupPlaylistByCategory(data.items),
-      updatedAt: new Date().toISOString(),
-    }
+    setUpdatingId(playlist.id);
 
-    updatePlaylist(playlist.id, newPlaylist)
-    Alert.alert("Success", "Playlist updated successfully");
+    try {
+      const freshData = await fetchPlaylistByUrl.mutateAsync(playlist.url!);
+      const newPlaylist: MyCustomPlaylist = {
+        ...playlist,
+        items: groupPlaylistByCategory(freshData.items),
+        updatedAt: new Date().toISOString(),
+      };
+
+      updatePlaylist(playlist.id, newPlaylist);
+      Alert.alert("Success", `${playlist.title} has been refreshed.`);
+    } catch (e) {
+      // Error handled by mutation onError
+    } finally {
+      setUpdatingId(null);
+    }
   }
 
 
 
   const filteredData = useMemo(() => {
-    if (!debouncedSearch.trim()) return data;
-    const searchLower = debouncedSearch.toLowerCase().trim();
-    const ndata = data.filter((playlist) =>
-      playlist.title.toLowerCase().includes(searchLower)
+    let result = [...data];
+
+    if (debouncedSearch.trim()) {
+      const searchLower = debouncedSearch.toLowerCase().trim();
+      result = result.filter((playlist) =>
+        playlist.title.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return result.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-    return  ndata.reverse();
   }, [data, debouncedSearch]);
 
   return (
     <>
       <FlatList
         data={filteredData}
-        renderItem={({ item }) => <PlaylistCard loading={fetchPlaylistByUrl.isPending} onUpdate={() => handleUpdate(item)} playlist={item} />}
+        renderItem={({ item }) => <PlaylistCard loading={updatingId === item.id} onUpdate={() => handleUpdate(item)} playlist={item} />}
         keyExtractor={(item, index) => item.id.toString()}
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
@@ -89,14 +104,14 @@ const HomeIndex = () => {
               title="No playlists yet"
               description="Add your first playlist to get started"
               actionLabel="Add Playlist"
-              onAction={() => router.push('/home/form/')}
+              onAction={() => router.push('/home/form/add')}
             />
           )
         }
       />
-      <TouchableOpacity style={styles.addButton} onPress={() => router.push('/home/form/add') }>
+      <Pressable style={styles.addButton} onPress={() => router.push('/home/form/add') }>
         <MaterialIcons name="add" color={Colors.background} size={30} />
-      </TouchableOpacity>
+      </Pressable>
     </>
   );
 };

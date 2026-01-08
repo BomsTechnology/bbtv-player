@@ -1,7 +1,6 @@
 import AddForm from "@/components/form/AddForm";
 import { Colors } from "@/constants/theme";
 import { usePlaylistStore } from "@/hooks/use-playliststore";
-import { Image } from "expo-image";
 import { Redirect } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -21,12 +20,7 @@ export default function Index() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        <Image
-          style={styles.logo}
-          source={require("@/assets/images/bbtp-logo.png")}
-          contentFit="contain"
-        />
-        <AddForm />
+        <AddForm showDefault />
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -37,8 +31,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
     paddingHorizontal: 30,
-    paddingVertical: 20,
-    alignItems: "center",
+    paddingVertical: 50,
+    alignItems: "flex-start",
     justifyContent: "center",
   },
   logo: {

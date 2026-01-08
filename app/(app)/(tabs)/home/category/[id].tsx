@@ -1,11 +1,13 @@
 import ChannelCard from "@/components/card/ChannelCard";
 import EmptyData from "@/components/EmptyData";
 import SearchInput from "@/components/form/SearchInput";
+import Toast from '@/components/Toast';
 import { Colors, Fonts } from "@/constants/theme";
 import { usePlaylistStore } from "@/hooks/use-playliststore";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useToast } from '@/hooks/useToast';
 import { FlashList } from "@shopify/flash-list";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { PlaylistItem } from "iptv-playlist-parser";
 import { useMemo, useState } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
@@ -22,9 +24,11 @@ const Channel = () => {
   const { id } = useLocalSearchParams<{
     id: string;
   }>();
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const { getSelectedCategory } = usePlaylistStore();
+  const { showToast, hideToast, toastVisible, toastMessage, toastType } = useToast();
   const data = getSelectedCategory(id);
 
   const filteredData = useMemo(() => {
@@ -49,6 +53,14 @@ const Channel = () => {
     return filteredData.length === 0 ? [header, empty] : [header, ...items];
   }, [filteredData]);
 
+  const handleOnPress = (channel: PlaylistItem) => {
+    if(!channel.tvg.id){
+      showToast('This channel is not available', 'error');
+    } else {
+      router.push(`/(app)/player/${channel.tvg.id}`)
+    }
+  }
+
   return (
     <>
       <FlashList
@@ -60,7 +72,7 @@ const Channel = () => {
                 <SearchInput
                   value={search}
                   onChangeText={setSearch}
-                  placeholder="Search category..."
+                  placeholder="Search channel..."
                 />
               </View>
             );
@@ -75,11 +87,15 @@ const Channel = () => {
           }
           return (
             <View style={styles.item}>
-              <ChannelCard channel={(item as ChannelItem).data!} />
+              <ChannelCard channel={(item as ChannelItem).data!} onPress={() => handleOnPress((item as ChannelItem).data)} />
             </View>
           );
         }}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item, index) => {
+          if (item.type === "search_bar") return "header";
+          if (item.type === "empty") return "empty";
+          return `${(item as ChannelItem).data.name}-${index}`;
+        }}
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.list}
@@ -94,6 +110,13 @@ const Channel = () => {
           }
         }}
         stickyHeaderIndices={[0]}
+      />
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        visible={toastVisible}
+        onHide={hideToast}
+        position="top"
       />
     </>
   );

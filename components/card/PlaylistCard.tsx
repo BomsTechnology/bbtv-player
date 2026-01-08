@@ -4,7 +4,7 @@ import { MyCustomPlaylist } from "@/types/playlistType";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
 const PlaylistCard = ({ playlist, onUpdate, loading }: { playlist: MyCustomPlaylist, onUpdate: () => void, loading: boolean }) => {
   const { setSelectedPlaylist, removePlaylist } = usePlaylistStore();
@@ -41,27 +41,27 @@ const PlaylistCard = ({ playlist, onUpdate, loading }: { playlist: MyCustomPlayl
 
   return (
         <View style={styles.container} >
-          <TouchableOpacity onPress={handleSelectedPlaylist} style={styles.middleBlock}>
+          <Pressable onPress={handleSelectedPlaylist} style={styles.middleBlock}>
             <Text style={styles.title}>{playlist.title}</Text>
             { loading ?
             <Text style={styles.detail} numberOfLines={1}>loading...</Text>
             :
               (<Text style={styles.detail} numberOfLines={1}>
-              Channels: {playlist.items[0]?.items?.length || 0} | Added: {createDate} 
-              {updateDate && ` | Updated: ${updateDate}`}
+              Channels: {playlist.items[0]?.items?.length || 0} {updateDate && ` | Updated: ${updateDate}`} | Added: {createDate} 
+              
             </Text>)
             }
-          </TouchableOpacity>
+          </Pressable>
           <View style={styles.rightBlock}>
-            {playlist.type === "url" && <TouchableOpacity onPress={onUpdate}>
+            {playlist.type === "url" && <Pressable onPress={onUpdate}>
               <MaterialIcons name="refresh" color={Colors.text} size={24} />
-            </TouchableOpacity>}
-            <TouchableOpacity onPress={() => router.push(`/home/form/${playlist.id}`)}>
+            </Pressable>}
+            <Pressable onPress={() => router.push(`/home/form/${playlist.id}`)}>
               <MaterialIcons name="edit" color={Colors.text} size={24} />
-            </TouchableOpacity>
-            <TouchableOpacity>
+            </Pressable>
+            <Pressable>
               <MaterialIcons name="delete" color={Colors.text} size={24} onPress={deleteAlert} />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
   );

@@ -1,6 +1,6 @@
 import { Colors, Fonts } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, TextInput, TextInputProps, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 
 interface SearchInputProps extends TextInputProps {
   value: string;
@@ -42,9 +42,9 @@ const SearchInput = ({
       />
       
       {showClearButton && value.length > 0 && (
-        <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
+        <Pressable onPress={handleClear} style={styles.clearButton}>
           <Ionicons name="close-circle" size={20} color="#999" />
-        </TouchableOpacity>
+        </Pressable>
       )}
     </View>
   );

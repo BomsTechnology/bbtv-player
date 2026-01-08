@@ -6,14 +6,15 @@ import { MyCustomPlaylist } from "@/types/playlistType";
 import generateId from "@/utils/generateID";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import parser from 'iptv-playlist-parser';
+import parser from "iptv-playlist-parser";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -26,7 +27,12 @@ export interface FormProps {
   text: string;
 }
 
-const AddForm = () => {
+const DEFAULT_PLAYLIST = {
+  name: "Default Playlist",
+  url: "https://iptv-org.github.io/iptv/index.m3u",
+};
+
+const AddForm = ({ showDefault }: { showDefault?: boolean }) => {
   const router = useRouter();
   const { addPlaylist } = usePlaylistStore();
   const [formFields, setFormFields] = useState<FormProps>({
@@ -35,12 +41,13 @@ const AddForm = () => {
     url: "",
     text: "",
   });
+
   const fetchPlaylistByUrl = useMutation({
     mutationFn: (url: string) => playlistService.getPlaylistByUrl(url),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data) => {
       const playlist: MyCustomPlaylist = {
         id: generateId(),
-        title: formFields.name,
+        title: formFields.name || "Untitled Playlist",
         createdAt: new Date().toISOString(),
         type: formFields.type,
         url: formFields.type === "url" ? formFields.url : undefined,
@@ -49,204 +56,190 @@ const AddForm = () => {
       };
 
       addPlaylist(playlist);
-      router.replace("/home")
+      router.replace("/home");
     },
-    onError: (error) => {
-      Alert.alert("Error", error.message);
-    }
+    onError: (error: any) => {
+      Alert.alert(
+        "Connection Error",
+        error.message || "Could not fetch playlist."
+      );
+    },
   });
 
+  const isLoading = fetchPlaylistByUrl.isPending;
+
+  const handleAddDefault = () => {
+    setFormFields({
+      ...formFields,
+      type: "url",
+      name: DEFAULT_PLAYLIST.name,
+      url: DEFAULT_PLAYLIST.url,
+    });
+    fetchPlaylistByUrl.mutate(DEFAULT_PLAYLIST.url);
+  };
+
   const handleSubmit = () => {
-    if (!formFields.name.trim()) {
-      Alert.alert("Error", "Please enter a playlist name");
-      return;
+    const { name, url, text, type } = formFields;
+
+    if (!name.trim()) {
+      return Alert.alert("Required", "Please enter a playlist name");
     }
-    if (formFields.type === "url") {
-      if (!formFields.url.trim()) {
-        Alert.alert("Error", "Please enter a playlist URL");
-        return;
+
+    if (type === "url") {
+      if (!url.trim() || !url.startsWith("http")) {
+        return Alert.alert(
+          "Invalid URL",
+          "Please enter a valid http/https URL"
+        );
+      }
+      fetchPlaylistByUrl.mutate(url);
+    } else if (type === "text") {
+      if (!text.trim()) {
+        return Alert.alert("Required", "Please paste your M3U text");
       }
 
-      if (
-        !formFields.url.startsWith("http://") &&
-        !formFields.url.startsWith("https://")
-      ) {
-        Alert.alert("Error", "URL must start with http:// or https://");
-        return;
+      try {
+        const data = parser.parse(text);
+        const playlist: MyCustomPlaylist = {
+          id: generateId(),
+          title: name,
+          createdAt: new Date().toISOString(),
+          type: "text",
+          url: undefined,
+          header: data.header,
+          text: text,
+          items: groupPlaylistByCategory(data.items),
+        };
+        addPlaylist(playlist);
+        router.replace("/home");
+      } catch (e) {
+        Alert.alert(
+          "Parse Error",
+          "The text provided is not a valid M3U format."
+        );
       }
-
-      fetchPlaylistByUrl.mutate(formFields.url);
-    } else if (formFields.type === "text") {
-      if (!formFields.text.trim()) {
-        Alert.alert("Error", "Please enter playlist text");
-        return;
-      }
-      const data = parser.parse(formFields.text);
-      const playlist: MyCustomPlaylist = {
-        id: generateId(),
-        title: formFields.name,
-        createdAt: new Date().toISOString(),
-        type: formFields.type,
-        url: undefined,
-        header: data.header,
-        text: formFields.text,
-        items: groupPlaylistByCategory(data.items),
-      };
-      addPlaylist(playlist);
-      router.replace("/home");
-    } else {
     }
   };
 
   return (
     <KeyboardAvoidingView
-    behavior={"padding"}
+      behavior="padding"
       keyboardVerticalOffset={100}
       style={styles.content}
     >
       <Animated.Text entering={FadeInDown} style={styles.title}>
         Enter playlist information
       </Animated.Text>
+
       <View style={styles.formContainer}>
+        {/* Tab Switcher */}
         <Animated.View
           entering={FadeInDown.delay(100)}
           style={styles.switchContainer}
         >
-          <TouchableOpacity
-            onPress={() => {
-              setFormFields((data) => {
-                return { ...data, type: "upload" };
-              });
-            }}
-            style={[
-              styles.switch,
-              {
-                backgroundColor:
-                  formFields.type === "upload" ? Colors.primary : Colors.light,
-                  display: 'none'
-              },
-            ]}
-          >
-            <Text
+          {["url", "text"].map((t) => (
+            <Pressable
+              key={t}
+              disabled={isLoading}
+              onPress={() =>
+                setFormFields((prev) => ({ ...prev, type: t as any }))
+              }
               style={[
-                styles.switchText,
+                styles.switch,
                 {
-                  color:
-                    formFields.type === "upload"
-                      ? Colors.background
-                      : Colors.text,
+                  backgroundColor:
+                    formFields.type === t ? Colors.primary : "transparent",
                 },
               ]}
             >
-              Upload file
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setFormFields((data) => {
-                return { ...data, type: "url" };
-              });
-            }}
-            style={[
-              styles.switch,
-              {
-                backgroundColor:
-                  formFields.type === "url" ? Colors.primary : Colors.light,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.switchText,
-                {
-                  color:
-                    formFields.type === "url" ? Colors.background : Colors.text,
-                },
-              ]}
-            >
-              URL
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setFormFields((data) => {
-                return { ...data, type: "text" };
-              });
-            }}
-            style={[
-              styles.switch,
-              {
-                backgroundColor:
-                  formFields.type === "text" ? Colors.primary : Colors.light,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.switchText,
-                {
-                  color:
-                    formFields.type === "text"
-                      ? Colors.background
-                      : Colors.text,
-                },
-              ]}
-            >
-              Text
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.switchText,
+                  {
+                    color:
+                      formFields.type === t ? Colors.background : Colors.text,
+                  },
+                ]}
+              >
+                {t.toUpperCase()}
+              </Text>
+            </Pressable>
+          ))}
         </Animated.View>
+
         <View style={styles.inputContainer}>
           <Animated.View entering={FadeInDown.delay(200)}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, isLoading && { opacity: 0.5 }]}
               placeholder="Playlist name"
+              editable={!isLoading}
               value={formFields.name}
-              onChangeText={(name) =>
-                setFormFields((data) => ({ ...data, name }))
-              }
-              placeholderTextColor={Colors.text}
+              onChangeText={(name) => setFormFields((d) => ({ ...d, name }))}
+              placeholderTextColor={Colors.muted}
             />
           </Animated.View>
+
           <Animated.View entering={FadeInDown.delay(300)}>
             {formFields.type === "url" ? (
               <TextInput
-                style={styles.input}
-                placeholder="Playlist URL"
+                style={[styles.input, isLoading && { opacity: 0.5 }]}
+                placeholder="https://example.com/playlist.m3u"
+                editable={!isLoading}
                 value={formFields.url}
-                onChangeText={(url) =>
-                  setFormFields((data) => ({ ...data, url }))
-                }
-                placeholderTextColor={Colors.text}
+                onChangeText={(url) => setFormFields((d) => ({ ...d, url }))}
+                placeholderTextColor={Colors.muted}
+                autoCapitalize="none"
               />
-            ) : formFields.type === "text" ? (
+            ) : (
               <TextInput
-                style={[styles.input, { height: 100 }]}
-                editable
+                style={[
+                  styles.input,
+                  { height: 120, textAlignVertical: "top" },
+                  isLoading && { opacity: 0.5 },
+                ]}
+                editable={!isLoading}
                 multiline
-                placeholder="Playlist Text"
-                placeholderTextColor={Colors.text}
+                placeholder="Paste #EXTM3U content here..."
+                placeholderTextColor={Colors.muted}
                 value={formFields.text}
-                onChangeText={(text) =>
-                  setFormFields((data) => ({ ...data, text }))
-                }
+                onChangeText={(text) => setFormFields((d) => ({ ...d, text }))}
               />
-            ) : null}
+            )}
           </Animated.View>
         </View>
+
+        {/* Buttons */}
         <Animated.View
           entering={FadeInDown.delay(400)}
-          style={{ width: "100%" }}
+          style={{ width: "100%", gap: 12 }}
         >
-          <TouchableOpacity
-            style={styles.button}
+          <Pressable
+            style={[styles.button, isLoading && { opacity: 0.7 }]}
             onPress={handleSubmit}
-            disabled={fetchPlaylistByUrl.isPending}
+            disabled={isLoading}
           >
-            <Text style={styles.buttonText}>
-            {fetchPlaylistByUrl.isPending ? "Loading..." : "Submit"}
-            </Text>
-          </TouchableOpacity>
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Submit Playlist</Text>
+            )}
+          </Pressable>
+
+          {showDefault && (
+            <Pressable
+              style={[styles.button, { backgroundColor: "#000" }]}
+              onPress={handleAddDefault}
+              disabled={isLoading}
+            >
+              <Text style={styles.buttonText} numberOfLines={1}>
+                Add default playlist
+              </Text>
+
+              <Text style={styles.buttonTextSmall} numberOfLines={1}>
+                https://iptv-org.github.io (+10 000)
+              </Text>
+            </Pressable>
+          )}
         </Animated.View>
       </View>
     </KeyboardAvoidingView>
@@ -321,5 +314,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontFamily: Fonts.brandBlack,
     fontSize: 20,
+  },
+  buttonTextSmall: {
+    color: "#fff",
+    fontFamily: Fonts.brand,
+    fontSize: 10,
   },
 });

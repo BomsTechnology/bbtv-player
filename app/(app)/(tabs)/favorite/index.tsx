@@ -1,10 +1,13 @@
 import ChannelCard from "@/components/card/ChannelCard";
 import EmptyData from "@/components/EmptyData";
 import SearchInput from "@/components/form/SearchInput";
+import Toast from '@/components/Toast';
 import { Colors, Fonts } from "@/constants/theme";
 import useFavoriteStore from "@/hooks/use-favoritestore";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useToast } from '@/hooks/useToast';
 import { FlashList } from "@shopify/flash-list";
+import { useRouter } from "expo-router";
 import { PlaylistItem } from "iptv-playlist-parser";
 import { useMemo, useState } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
@@ -18,22 +21,20 @@ const CARD_WIDTH = SCREEN_WIDTH / 3;
 const CARD_HEIGHT = CARD_WIDTH * 1.2;
 
 const FavoriteIndex = () => {
+  const router = useRouter();
   const [search, setSearch] = useState("");
+  const { showToast, hideToast, toastVisible, toastMessage, toastType } = useToast();
   const debouncedSearch = useDebounce(search, 300);
   const { data: favorites } = useFavoriteStore();
 
-  // Extraire tous les channels des favoris
-  const favoriteChannels = useMemo(() => {
-    return favorites.map((favorite) => favorite.channel);
-  }, [favorites]);
-
   const filteredData = useMemo(() => {
-    if (!debouncedSearch.trim()) return favoriteChannels;
+    if (!debouncedSearch.trim()) return favorites.map((favorite) => favorite.channel);
+    
     const searchLower = debouncedSearch.toLowerCase().trim();
-    return favoriteChannels.filter((item) =>
-      item.name.toLowerCase().includes(searchLower)
+    return favorites.filter((item) =>
+      item.channel.name.toLowerCase().includes(searchLower)
     );
-  }, [debouncedSearch, favoriteChannels]);
+  }, [debouncedSearch, favorites]);
 
   const listData: ChannelListItem[] = useMemo(() => {
     const header: LayoutItem = { type: "search_bar" };
@@ -41,11 +42,19 @@ const FavoriteIndex = () => {
 
     const items: ChannelItem[] = (filteredData || []).map((item) => ({
       type: "channel",
-      data: item,
+      data: (item as PlaylistItem),
     }));
 
     return filteredData.length === 0 ? [header, empty] : [header, ...items];
   }, [filteredData]);
+
+  const handleOnPress = (channel: PlaylistItem) => {
+    if(!channel.tvg.id){
+      showToast('This channel is not available', 'error');
+    } else {
+      router.push(`/(app)/player/${channel.tvg.id}`)
+    }
+  }
 
   return (
     <>
@@ -81,15 +90,14 @@ const FavoriteIndex = () => {
           }
           return (
             <View style={styles.item}>
-              <ChannelCard channel={(item as ChannelItem).data!} />
+              <ChannelCard channel={(item as ChannelItem).data!} onPress={() => handleOnPress((item as ChannelItem).data)} />
             </View>
           );
         }}
         keyExtractor={(item, index) => {
-          if (item.type === "channel") {
-            return (item as ChannelItem).data.tvg.id || index.toString();
-          }
-          return index.toString();
+          if (item.type === "search_bar") return "header";
+          if (item.type === "empty") return "empty";
+          return `${(item as ChannelItem).data.name}-${index}`;
         }}
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
@@ -103,6 +111,13 @@ const FavoriteIndex = () => {
           }
         }}
         stickyHeaderIndices={[0]}
+      />
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        visible={toastVisible}
+        onHide={hideToast}
+        position="top"
       />
     </>
   );

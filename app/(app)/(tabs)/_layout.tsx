@@ -1,7 +1,8 @@
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
-import React from "react";
+
+
 
 const TabLayout = () => {
   return (
@@ -11,6 +12,7 @@ const TabLayout = () => {
           fontSize: 9,
           fontWeight: "600",
           color: Colors.primary,
+          fontFamily: Fonts.brand,
         },
       }}
     >
@@ -36,6 +38,20 @@ const TabLayout = () => {
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "star" : "star-outline"}
+              color={Colors.primary}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "settings" : "settings-outline"}
               color={Colors.primary}
               size={size}
             />

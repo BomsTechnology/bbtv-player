@@ -1,13 +1,12 @@
 import { Colors, Fonts } from "@/constants/theme";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
 import { PlaylistItem } from "iptv-playlist-parser";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const PlaylistCard = ({ channel }: { channel: PlaylistItem }) => {
+const PlaylistCard = ({ channel, onPress }: { channel: PlaylistItem, onPress: () => void }) => {
+
   return (
-    <Link href={`/(app)/player/${channel.tvg.id}`} asChild>
-      <TouchableOpacity style={styles.container}>
+      <Pressable style={styles.container} onPress={onPress}>
         <View style={styles.rightBlock}>
           {(channel.tvg.logo ? (
             <Image
@@ -27,8 +26,7 @@ const PlaylistCard = ({ channel }: { channel: PlaylistItem }) => {
           <Text style={styles.title} numberOfLines={1}>{channel.name}</Text>
           <Text style={styles.detail} numberOfLines={1}>{channel.group.title}</Text>
         </View>
-      </TouchableOpacity>
-    </Link>
+      </Pressable>
   );
 };
 

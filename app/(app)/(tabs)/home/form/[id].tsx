@@ -4,7 +4,7 @@ import { Colors } from "@/constants/theme";
 import { usePlaylistStore } from "@/hooks/use-playliststore";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 export default function Add() {
   const router = useRouter();
@@ -19,12 +19,12 @@ export default function Add() {
   }
   return (
     <View style={styles.container}>
-      <TouchableOpacity
+      <Pressable
         style={styles.closeBtn}
         onPress={() => router.dismiss()}
       >
         <Ionicons name="close" size={22} />
-      </TouchableOpacity>
+      </Pressable>
       { id !== "add" ?
         <EditForm  playlist={playlist} /> :
         <AddForm />}

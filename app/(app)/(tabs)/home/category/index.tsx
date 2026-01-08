@@ -18,17 +18,20 @@ const Category = () => {
   const { selectedPlaylist } = usePlaylistStore();
 
   const filteredData = useMemo(() => {
-    if (!debouncedSearch.trim()) return selectedPlaylist?.items || [];
+    const categories = selectedPlaylist?.items || [];
+    if (!debouncedSearch.trim()) return categories;
+
     const searchLower = debouncedSearch.toLowerCase().trim();
-    return selectedPlaylist?.items ? selectedPlaylist?.items.filter((item) =>
+    return categories.filter((item) =>
       item.category.toLowerCase().includes(searchLower)
-    ) : [];
+    );
   }, [debouncedSearch, selectedPlaylist?.items]);
+
   return (
     <FlatList
         data={filteredData}
         renderItem={({ item }) => <CategoryCard category={item} />}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item, index) => item.category}
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.list}
@@ -49,13 +52,13 @@ const Category = () => {
             <EmptyData
               icon="search"
               title="No categories found"
-              description="Try a different search term"
+              description={`No results for "${debouncedSearch}"`}
             />
           ) : (
             <EmptyData
               icon="folder-open-outline"
               title="No categories yet"
-              description="Add your first playlist to get started"
+              description="This playlist doesn't seem to have any categories."
             />
           )
         }

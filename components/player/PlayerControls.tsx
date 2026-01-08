@@ -1,7 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 interface PlayerControlsProps {
@@ -45,7 +45,6 @@ const PlayerControls = ({
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#fff" />
-        <Text style={styles.loadingText}>Buffering...</Text>
       </View>
     );
   }
@@ -61,9 +60,8 @@ const PlayerControls = ({
 
   if (!visible) {
     return (
-      <TouchableOpacity
+      <Pressable
         style={styles.tapZone}
-        activeOpacity={1}
         onPress={onToggleControls}
       />
     );
@@ -76,27 +74,26 @@ const PlayerControls = ({
       style={styles.controlsContainer}
     >
       {/* Overlay sombre */}
-      <TouchableOpacity
+      <Pressable
         style={styles.overlay}
-        activeOpacity={1}
         onPress={onToggleControls}
       />
 
       {/* Contrôles centraux */}
       <View style={styles.centerControls}>
-        <TouchableOpacity style={styles.controlButton} onPress={onSkipBackward}>
+        <Pressable style={styles.controlButton} onPress={onSkipBackward}>
           <Ionicons name="play-back" size={40} color="#fff" />
           <Text style={styles.skipText}>10s</Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity style={styles.playPauseButton} onPress={onPlayPause}>
+        <Pressable style={styles.playPauseButton} onPress={onPlayPause}>
           <Ionicons name={paused ? 'play' : 'pause'} size={64} color="#fff" />
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity style={styles.controlButton} onPress={onSkipForward}>
+        <Pressable style={styles.controlButton} onPress={onSkipForward}>
           <Ionicons name="play-forward" size={40} color="#fff" />
           <Text style={styles.skipText}>10s</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <View style={styles.bottomControls}>
@@ -119,7 +116,7 @@ const PlayerControls = ({
             </Text>
           </View>
 
-          <TouchableOpacity 
+          <Pressable 
             style={styles.orientationButton} 
             onPress={onToggleOrientation}
           >
@@ -128,7 +125,7 @@ const PlayerControls = ({
               size={24} 
               color="#fff" 
             />
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </Animated.View>
@@ -175,6 +172,7 @@ const styles = StyleSheet.create({
   controlButton: {
     alignItems: 'center',
     justifyContent: 'center',
+    display: 'none',
   },
   playPauseButton: {
     backgroundColor: 'rgba(0,0,0,0.6)',

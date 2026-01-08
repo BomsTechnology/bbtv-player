@@ -3,6 +3,7 @@ import zustandStorage from '@/utils/zustandStorage';
 import { PlaylistItem } from 'iptv-playlist-parser';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import useFavoriteStore from './use-favoritestore';
 
 export interface PlayListStore {
     data: MyCustomPlaylist[],
@@ -26,6 +27,7 @@ export const usePlaylistStore = create<PlayListStore>()(
                 set((state) => ({ data: [...state.data, playlist] }));
             },
             removePlaylist: (id: string) => {
+                useFavoriteStore.getState().clearByPlaylistId(id);
                 set((state) => ({ data: state.data.filter((playlist) => playlist.id !== id) }));
             },
             setSelectedPlaylist: (playlist: MyCustomPlaylist) => {

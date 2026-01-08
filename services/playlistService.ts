@@ -6,7 +6,7 @@ export const playlistService = {
 
   async getPlaylistByUrl( url: string ): Promise<Playlist> {
     try {
-      const relayUrl = `${RELAY}?url=${url}`;
+      const relayUrl = `${RELAY}?url=${encodeURIComponent(url)}`;
       
       const response = await fetch(relayUrl, {
         method: 'GET',

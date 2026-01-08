@@ -1,6 +1,6 @@
 import { Colors, Fonts } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface EmptyDataProps {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -32,9 +32,9 @@ const EmptyData = ({
       )}
       
       {actionLabel && onAction && (
-        <TouchableOpacity style={styles.button} onPress={onAction}>
+        <Pressable style={styles.button} onPress={onAction}>
           <Text style={styles.buttonText}>{actionLabel}</Text>
-        </TouchableOpacity>
+        </Pressable>
       )}
     </View>
   );

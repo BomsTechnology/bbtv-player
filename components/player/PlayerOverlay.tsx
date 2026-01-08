@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/useToast';
 import { Ionicons } from '@expo/vector-icons';
 import { PlaylistItem } from 'iptv-playlist-parser';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -34,14 +34,14 @@ const PlayerOverlay = ({ channel, visible, onClose }: PlayerOverlayProps) => {
     
     if (isFav) {
       removeItem(channel.tvg.id);
-      showToast('Retiré des favoris', 'success');
+      showToast('Removed from favorites', 'success');
     } else {
       addItem({
         id: channel.tvg.id,
         playlistId: selectedPlaylist.id,
         channel,
       });
-      showToast('Ajouté aux favoris', 'success');
+      showToast('Added to favorites', 'success');
     }
   };
 
@@ -62,12 +62,12 @@ const PlayerOverlay = ({ channel, visible, onClose }: PlayerOverlayProps) => {
         </View>
         
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={toggleFavorite}>
+          <Pressable style={styles.button} onPress={toggleFavorite}>
             <Ionicons name={isFav ? "star" : "star-outline"} size={28} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={onClose}>
+          </Pressable>
+          <Pressable style={styles.button} onPress={onClose}>
             <Ionicons name="close" size={28} color="#fff" />
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </Animated.View>
 
