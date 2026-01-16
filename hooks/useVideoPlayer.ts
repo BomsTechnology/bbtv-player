@@ -47,28 +47,27 @@ export const useVideoPlayer = () => {
     setState(prev => ({ ...prev, showControls: !prev.showControls }));
   }, []);
 
-  const toggleOrientation = useCallback(async (orientation?: 'portrait' | 'landscape') => {
+  const toggleOrientation = useCallback(async () => {
+    // Determine the target orientation first
+    const targetIsLandscape = !state.isLandscape;
+    const targetLock = targetIsLandscape 
+      ? ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT
+      : ScreenOrientation.OrientationLock.PORTRAIT_UP;
+  
     try {
-      if (state.isLandscape) {
-        setState(prev => ({ ...prev, isLandscape: false }));
-        await ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.PORTRAIT
-        );
-      } else {
-        setState(prev => ({ ...prev, isLandscape: true }));
-        await ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.LANDSCAPE
-        );
-      }
+      // 1. Attempt the native lock first
+      await ScreenOrientation.lockAsync(targetLock);
+      
+      // 2. Only update state if the native lock succeeds
+      setState(prev => ({ ...prev, isLandscape: targetIsLandscape }));
     } catch (error) {
-      console.log('Orientation toggle failed:', error);
+      console.warn('Orientation lock failed, falling back to unlock:', error);
       
-      setState(prev => ({ ...prev, isLandscape: !prev.isLandscape }));
-      
+      // 3. If locking fails, unlock to allow the user to rotate manually
       try {
         await ScreenOrientation.unlockAsync();
       } catch (unlockError) {
-        console.log('Unlock failed:', unlockError);
+        console.error('Unlock failed:', unlockError);
       }
     }
   }, [state.isLandscape]);
@@ -85,7 +84,7 @@ export const useVideoPlayer = () => {
         clearTimeout(controlsTimeout.current);
       }
     };
-  }, [state.showControls, state.paused]);
+  }, [state.showControls, state.paused, setShowControls]);
 
   return {
     state,

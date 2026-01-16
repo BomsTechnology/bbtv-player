@@ -1,4 +1,5 @@
 import { Colors, Fonts } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 
@@ -18,32 +19,47 @@ const SearchInput = ({
   showClearButton = true,
   ...textInputProps
 }: SearchInputProps) => {
+  const { isDark } = useTheme();
+
   const handleClear = () => {
     onChangeText("");
     onClear?.();
   };
 
   return (
-    <View style={styles.searchContainer}>
+    <View 
+      style={[
+        styles.searchContainer,
+        {
+          backgroundColor: isDark ? Colors.darkDark : '#fff',
+          borderColor: isDark ? Colors.lightDark : Colors.light,
+        }
+      ]}
+    >
       <Ionicons 
         name="search" 
         size={20} 
-        color="#999" 
+        color={isDark ? Colors.mutedDark : "#999"} 
         style={styles.searchIcon} 
       />
-      
       <TextInput
         placeholder={placeholder}
-        style={styles.input}
-        placeholderTextColor="#999"
+        style={[
+          styles.input,
+          { color: isDark ? Colors.textDark : Colors.text }
+        ]}
+        placeholderTextColor={isDark ? Colors.mutedDark : "#999"}
         value={value}
         onChangeText={onChangeText}
         {...textInputProps}
       />
-      
       {showClearButton && value.length > 0 && (
         <Pressable onPress={handleClear} style={styles.clearButton}>
-          <Ionicons name="close-circle" size={20} color="#999" />
+          <Ionicons 
+            name="close-circle" 
+            size={20} 
+            color={isDark ? Colors.mutedDark : "#999"} 
+          />
         </Pressable>
       )}
     </View>
@@ -54,11 +70,9 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 10,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: Colors.light,
   },
   searchIcon: {
   },

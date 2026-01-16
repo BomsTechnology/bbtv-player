@@ -1,86 +1,153 @@
 import { Colors, Fonts } from "@/constants/theme";
-import { usePlaylistStore } from "@/hooks/use-playliststore";
+import { useTheme } from "@/hooks/useTheme";
 import { MyCustomPlaylist } from "@/types/playlistType";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
-import { useCallback } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Link, useRouter } from "expo-router";
+import { memo, useCallback } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const PlaylistCard = ({ playlist, onUpdate, loading }: { playlist: MyCustomPlaylist, onUpdate: () => void, loading: boolean }) => {
-  const { setSelectedPlaylist, removePlaylist } = usePlaylistStore();
+interface PlaylistCardProps {
+  playlist: MyCustomPlaylist;
+  onUpdate: () => void;
+  loading: boolean;
+  updateDate?: string;
+  createDate: string;
+  handleDelete: () => void;
+}
+
+const PlaylistCard = ({
+  playlist,
+  onUpdate,
+  loading,
+  updateDate,
+  createDate,
+  handleDelete,
+}: PlaylistCardProps) => {
   const router = useRouter();
-  const createDate = new Date(playlist.createdAt).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-  const updateDate = playlist.updatedAt ? new Date(playlist.updatedAt).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }) : null;
-  const handleSelectedPlaylist = useCallback(() => {
-    setSelectedPlaylist(playlist);
-    router.push("/home/category");
-  }, [playlist, setSelectedPlaylist, router]);
+  const { isDark } = useTheme();
+  const channelCount = playlist.items[0]?.items?.length || 0;
 
-  const handleDeletePlaylist = useCallback(() => {
-    removePlaylist(playlist.id);
-    Alert.alert("Success", "Playlist deleted successfully");
-  }, [playlist.id, removePlaylist]);
-
-  const deleteAlert = useCallback(() =>
-    Alert.alert('Delete Playlist', 'Are you sure you want to delete this playlist?', [
-      {
-        text: 'Cancel',
-        onPress: () => null,
-        style: 'cancel',
-      },
-      {text: 'Delete', onPress: handleDeletePlaylist},
-    ]),[handleDeletePlaylist]);
+  const handlePress = useCallback(() => {
+    // Précharger juste avant la navigation (sans latence ajoutée)
+    router.prefetch(`/(app)/(tabs)/home/category/${playlist.id}`);
+    // Navigation immédiate après
+    router.push({
+      pathname: "/(app)/(tabs)/home/category/[playlistId]",
+      params: { playlistId: playlist.id },
+    });
+  }, [playlist.id, router]);
 
   return (
-        <View style={styles.container} >
-          <Pressable onPress={handleSelectedPlaylist} style={styles.middleBlock}>
-            <Text style={styles.title}>{playlist.title}</Text>
-            { loading ?
-            <Text style={styles.detail} numberOfLines={1}>loading...</Text>
-            :
-              (<Text style={styles.detail} numberOfLines={1}>
-              Channels: {playlist.items[0]?.items?.length || 0} {updateDate && ` | Updated: ${updateDate}`} | Added: {createDate} 
-              
-            </Text>)
-            }
+    <View style={[
+      styles.container,
+      { 
+        backgroundColor: isDark ? Colors.darkDark : Colors.background,
+        shadowColor: isDark ? "#fff" : "#000",
+        shadowOpacity: isDark ? 0.1 : 0.25,
+      }
+    ]}>
+      <Link
+        href={{
+          pathname: "/(app)/(tabs)/home/category/[playlistId]",
+          params: { playlistId: playlist.id },
+        }}
+        asChild
+      ></Link>
+        <Pressable style={styles.middleBlock} onPress={handlePress} unstable_pressDelay={0}>
+          <Text style={[
+            styles.title,
+            { color: isDark ? Colors.textDark : Colors.text }
+          ]} numberOfLines={1}>
+            {playlist.title}
+          </Text>
+          {loading ? (
+            <Text style={[
+              styles.detail,
+              { color: isDark ? Colors.mutedDark : Colors.muted }
+            ]} numberOfLines={1}>
+              Loading...
+            </Text>
+          ) : (
+            <Text style={[
+              styles.detail,
+              { color: isDark ? Colors.mutedDark : Colors.muted }
+            ]} numberOfLines={1}>
+              Channels: {channelCount}
+              {updateDate && ` | Updated: ${updateDate}`} | Added: {createDate}
+            </Text>
+          )}
+        </Pressable>
+      
+      <View style={styles.rightBlock}>
+        {playlist.type === "url" && (
+          <Pressable 
+            onPress={onUpdate}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            disabled={loading}
+            unstable_pressDelay={0}
+          >
+            <MaterialIcons 
+              name="refresh" 
+              color={loading 
+                ? (isDark ? Colors.mutedDark : Colors.muted) 
+                : (isDark ? Colors.textDark : Colors.text)
+              } 
+              size={24} 
+            />
           </Pressable>
-          <View style={styles.rightBlock}>
-            {playlist.type === "url" && <Pressable onPress={onUpdate}>
-              <MaterialIcons name="refresh" color={Colors.text} size={24} />
-            </Pressable>}
-            <Pressable onPress={() => router.push(`/home/form/${playlist.id}`)}>
-              <MaterialIcons name="edit" color={Colors.text} size={24} />
-            </Pressable>
-            <Pressable>
-              <MaterialIcons name="delete" color={Colors.text} size={24} onPress={deleteAlert} />
-            </Pressable>
-          </View>
-        </View>
+        )}
+        <Link
+          href={{
+            pathname: "/(app)/(tabs)/home/form/[id]",
+            params: { id: playlist.id },
+          }}
+          asChild
+        >
+          <Pressable hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} unstable_pressDelay={0}>
+            <MaterialIcons 
+              name="edit" 
+              color={isDark ? Colors.textDark : Colors.text} 
+              size={24} 
+            />
+          </Pressable>
+        </Link>
+        <Pressable 
+          onPress={handleDelete}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          unstable_pressDelay={0}
+        >
+          <MaterialIcons 
+            name="delete" 
+            color={isDark ? Colors.textDark : Colors.text} 
+            size={24} 
+          />
+        </Pressable>
+      </View>
+    </View>
   );
 };
 
-export default PlaylistCard;
+export default memo(PlaylistCard, (prevProps, nextProps) => {
+  return (
+    prevProps.playlist.id === nextProps.playlist.id &&
+    prevProps.playlist.title === nextProps.playlist.title &&
+    prevProps.playlist.updatedAt === nextProps.playlist.updatedAt &&
+    prevProps.loading === nextProps.loading &&
+    prevProps.updateDate === nextProps.updateDate &&
+    prevProps.createDate === nextProps.createDate &&
+    prevProps.playlist.items[0]?.items?.length === nextProps.playlist.items[0]?.items?.length
+  );
+});
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
     marginHorizontal: 20,
     borderRadius: 10,
-    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
     },
-    shadowOpacity: 0.25,
     shadowRadius: 1.0,
     elevation: 1,
     flexDirection: "row",
@@ -88,23 +155,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontFamily: Fonts.brandBold,
-    color: Colors.text,
   },
   detail: {
     fontSize: 14,
     fontFamily: Fonts.brand,
-    color: Colors.muted,
   },
-  leftBlock: {},
   middleBlock: {
     flex: 1,
     paddingVertical: 15,
-    paddingLeft: 15
+    paddingLeft: 15,
   },
   rightBlock: {
     flexDirection: "row",
     gap: 5,
     paddingVertical: 15,
-    paddingRight: 15
+    paddingRight: 15,
+    alignItems: "center",
   },
 });

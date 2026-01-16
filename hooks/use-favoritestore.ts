@@ -3,7 +3,7 @@ import { PlaylistItem } from 'iptv-playlist-parser';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-interface FavoriteItem {
+export interface FavoriteItem {
     id: string;
     playlistId: string;
     channel: PlaylistItem;
@@ -15,7 +15,8 @@ interface FavoriteStore {
     removeItem: (id: string) => void;
     isFavorite: (tvgId: string, playlistId: string) => boolean;
     clearByPlaylistId: (playlistId: string) => void;
-    getData: () => FavoriteItem[]
+    getData: () => FavoriteItem[],
+    getItem: (id: string) => FavoriteItem
 }
 
 const useFavoriteStore = create<FavoriteStore>()(
@@ -30,6 +31,9 @@ const useFavoriteStore = create<FavoriteStore>()(
             },
             isFavorite: (tvgId: string, playlistId: string) => {
                 return get().data.some((item) => item.playlistId === playlistId && item.channel.tvg.id === tvgId);
+            },
+            getItem: (id: string) => {
+                return get().data.find((item) => item.id === id)!;
             },
             getData: () => get().data,
             clearByPlaylistId: (playlistId: string) => {

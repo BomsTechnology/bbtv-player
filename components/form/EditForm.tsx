@@ -1,5 +1,6 @@
 import { Colors, Fonts } from "@/constants/theme";
 import { usePlaylistStore } from "@/hooks/use-playliststore";
+import { useTheme } from "@/hooks/useTheme";
 import { MyCustomPlaylist } from "@/types/playlistType";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -15,6 +16,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 const EditForm = ({ playlist }: { playlist: MyCustomPlaylist }) => {
+  const { isDark } = useTheme();
   const { updatePlaylist } = usePlaylistStore();
   const router = useRouter();
   
@@ -42,7 +44,13 @@ const EditForm = ({ playlist }: { playlist: MyCustomPlaylist }) => {
       keyboardVerticalOffset={100}
       style={styles.content}
     >
-      <Animated.Text entering={FadeInDown} style={styles.title}>
+      <Animated.Text 
+        entering={FadeInDown} 
+        style={[
+          styles.title,
+          { color: isDark ? Colors.textDark : Colors.text }
+        ]}
+      >
         Edit playlist information
       </Animated.Text>
 
@@ -50,7 +58,10 @@ const EditForm = ({ playlist }: { playlist: MyCustomPlaylist }) => {
         {/* Tab Switcher (Visual only, interactions disabled for Edit) */}
         <Animated.View
           entering={FadeInDown.delay(100)}
-          style={styles.switchContainer}
+          style={[
+            styles.switchContainer,
+            { backgroundColor: isDark ? Colors.lightDark : Colors.light }
+          ]}
         >
           {["url", "text"].map((t) => (
             <View
@@ -59,7 +70,9 @@ const EditForm = ({ playlist }: { playlist: MyCustomPlaylist }) => {
                 styles.switch,
                 {
                   backgroundColor:
-                    playlist.type === t ? Colors.primary : "transparent",
+                    playlist.type === t 
+                      ? (isDark ? Colors.primaryDark : Colors.primary)
+                      : "transparent",
                 },
               ]}
             >
@@ -68,7 +81,9 @@ const EditForm = ({ playlist }: { playlist: MyCustomPlaylist }) => {
                   styles.switchText,
                   {
                     color:
-                      playlist.type === t ? Colors.background : Colors.text,
+                      playlist.type === t 
+                        ? Colors.background 
+                        : (isDark ? Colors.textDark : Colors.text),
                   },
                 ]}
               >
@@ -82,11 +97,18 @@ const EditForm = ({ playlist }: { playlist: MyCustomPlaylist }) => {
           {/* Playlist Name Input */}
           <Animated.View entering={FadeInDown.delay(200)}>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                {
+                  borderColor: isDark ? Colors.lightDark : Colors.muted,
+                  backgroundColor: isDark ? Colors.darkDark : Colors.background,
+                  color: isDark ? Colors.textDark : Colors.text,
+                }
+              ]}
               placeholder="Playlist name"
               value={name}
               onChangeText={setName}
-              placeholderTextColor={Colors.text}
+              placeholderTextColor={isDark ? Colors.mutedDark : Colors.muted}
             />
           </Animated.View>
 
@@ -94,17 +116,31 @@ const EditForm = ({ playlist }: { playlist: MyCustomPlaylist }) => {
           <Animated.View entering={FadeInDown.delay(300)}>
             {playlist.type === "url" ? (
               <TextInput
-                style={[styles.input, styles.disabledInput]}
+                style={[
+                  styles.input, 
+                  styles.disabledInput,
+                  {
+                    borderColor: isDark ? Colors.lightDark : Colors.muted,
+                    backgroundColor: isDark ? Colors.lightDark : Colors.light,
+                    color: isDark ? Colors.mutedDark : Colors.text,
+                  }
+                ]}
                 value={playlist.url}
                 editable={false}
-                placeholderTextColor={Colors.text}
+                placeholderTextColor={isDark ? Colors.mutedDark : Colors.text}
               />
             ) : (
               <TextInput
                 style={[
                   styles.input,
                   styles.disabledInput,
-                  { height: 120, textAlignVertical: "top" },
+                  { 
+                    height: 120, 
+                    textAlignVertical: "top",
+                    borderColor: isDark ? Colors.lightDark : Colors.muted,
+                    backgroundColor: isDark ? Colors.lightDark : Colors.light,
+                    color: isDark ? Colors.mutedDark : Colors.text,
+                  },
                 ]}
                 editable={false}
                 multiline
@@ -119,7 +155,13 @@ const EditForm = ({ playlist }: { playlist: MyCustomPlaylist }) => {
           entering={FadeInDown.delay(400)}
           style={{ width: "100%" }}
         >
-          <Pressable style={styles.button} onPress={handleSubmit}>
+          <Pressable 
+            style={[
+              styles.button,
+              { backgroundColor: isDark ? Colors.primaryDark : Colors.primary }
+            ]} 
+            onPress={handleSubmit}
+          >
             <Text style={styles.buttonText}>Update Playlist</Text>
           </Pressable>
         </Animated.View>
@@ -139,7 +181,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontFamily: Fonts.brandBlack,
-    color: Colors.text,
     textAlign: "center",
   },
   formContainer: {
@@ -154,23 +195,19 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   input: {
-    borderColor: Colors.muted,
     borderWidth: 1,
-    borderRadius: 5, // Matches AddForm
+    borderRadius: 5,
     padding: 10,
     width: "100%",
     fontFamily: Fonts.brandBold,
     height: 50,
     fontSize: 18,
-    color: Colors.text,
   },
   disabledInput: {
-    backgroundColor: Colors.light,
     opacity: 0.6,
   },
   switchContainer: {
     flexDirection: "row",
-    backgroundColor: Colors.light,
     borderRadius: 15,
     padding: 5,
     width: "100%",
@@ -187,7 +224,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   button: {
-    backgroundColor: Colors.primary,
     padding: 15,
     borderRadius: 5,
     width: "100%",

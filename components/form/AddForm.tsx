@@ -1,6 +1,7 @@
 import { Colors, Fonts } from "@/constants/theme";
 import { usePlaylistStore } from "@/hooks/use-playliststore";
 import { groupPlaylistByCategory } from "@/hooks/usePlalist";
+import { useTheme } from "@/hooks/useTheme";
 import { playlistService } from "@/services/playlistService";
 import { MyCustomPlaylist } from "@/types/playlistType";
 import generateId from "@/utils/generateID";
@@ -33,6 +34,7 @@ const DEFAULT_PLAYLIST = {
 };
 
 const AddForm = ({ showDefault }: { showDefault?: boolean }) => {
+  const { isDark } = useTheme();
   const router = useRouter();
   const { addPlaylist } = usePlaylistStore();
   const [formFields, setFormFields] = useState<FormProps>({
@@ -127,7 +129,13 @@ const AddForm = ({ showDefault }: { showDefault?: boolean }) => {
       keyboardVerticalOffset={100}
       style={styles.content}
     >
-      <Animated.Text entering={FadeInDown} style={styles.title}>
+      <Animated.Text 
+        entering={FadeInDown} 
+        style={[
+          styles.title,
+          { color: isDark ? Colors.textDark : Colors.text }
+        ]}
+      >
         Enter playlist information
       </Animated.Text>
 
@@ -135,7 +143,10 @@ const AddForm = ({ showDefault }: { showDefault?: boolean }) => {
         {/* Tab Switcher */}
         <Animated.View
           entering={FadeInDown.delay(100)}
-          style={styles.switchContainer}
+          style={[
+            styles.switchContainer,
+            { backgroundColor: isDark ? Colors.lightDark : Colors.light }
+          ]}
         >
           {["url", "text"].map((t) => (
             <Pressable
@@ -148,7 +159,9 @@ const AddForm = ({ showDefault }: { showDefault?: boolean }) => {
                 styles.switch,
                 {
                   backgroundColor:
-                    formFields.type === t ? Colors.primary : "transparent",
+                    formFields.type === t 
+                      ? (isDark ? Colors.primaryDark : Colors.primary)
+                      : "transparent",
                 },
               ]}
             >
@@ -157,7 +170,9 @@ const AddForm = ({ showDefault }: { showDefault?: boolean }) => {
                   styles.switchText,
                   {
                     color:
-                      formFields.type === t ? Colors.background : Colors.text,
+                      formFields.type === t 
+                        ? Colors.background 
+                        : (isDark ? Colors.textDark : Colors.text),
                   },
                 ]}
               >
@@ -170,37 +185,59 @@ const AddForm = ({ showDefault }: { showDefault?: boolean }) => {
         <View style={styles.inputContainer}>
           <Animated.View entering={FadeInDown.delay(200)}>
             <TextInput
-              style={[styles.input, isLoading && { opacity: 0.5 }]}
+              style={[
+                styles.input,
+                {
+                  borderColor: isDark ? Colors.lightDark : Colors.muted,
+                  backgroundColor: isDark ? Colors.darkDark : Colors.background,
+                  color: isDark ? Colors.textDark : Colors.text,
+                },
+                isLoading && { opacity: 0.5 }
+              ]}
               placeholder="Playlist name"
               editable={!isLoading}
               value={formFields.name}
               onChangeText={(name) => setFormFields((d) => ({ ...d, name }))}
-              placeholderTextColor={Colors.muted}
+              placeholderTextColor={isDark ? Colors.mutedDark : Colors.muted}
             />
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(300)}>
             {formFields.type === "url" ? (
               <TextInput
-                style={[styles.input, isLoading && { opacity: 0.5 }]}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: isDark ? Colors.lightDark : Colors.muted,
+                    backgroundColor: isDark ? Colors.darkDark : Colors.background,
+                    color: isDark ? Colors.textDark : Colors.text,
+                  },
+                  isLoading && { opacity: 0.5 }
+                ]}
                 placeholder="https://example.com/playlist.m3u"
                 editable={!isLoading}
                 value={formFields.url}
                 onChangeText={(url) => setFormFields((d) => ({ ...d, url }))}
-                placeholderTextColor={Colors.muted}
+                placeholderTextColor={isDark ? Colors.mutedDark : Colors.muted}
                 autoCapitalize="none"
               />
             ) : (
               <TextInput
                 style={[
                   styles.input,
-                  { height: 120, textAlignVertical: "top" },
+                  { 
+                    height: 120, 
+                    textAlignVertical: "top",
+                    borderColor: isDark ? Colors.lightDark : Colors.muted,
+                    backgroundColor: isDark ? Colors.darkDark : Colors.background,
+                    color: isDark ? Colors.textDark : Colors.text,
+                  },
                   isLoading && { opacity: 0.5 },
                 ]}
                 editable={!isLoading}
                 multiline
                 placeholder="Paste #EXTM3U content here..."
-                placeholderTextColor={Colors.muted}
+                placeholderTextColor={isDark ? Colors.mutedDark : Colors.muted}
                 value={formFields.text}
                 onChangeText={(text) => setFormFields((d) => ({ ...d, text }))}
               />
@@ -214,7 +251,11 @@ const AddForm = ({ showDefault }: { showDefault?: boolean }) => {
           style={{ width: "100%", gap: 12 }}
         >
           <Pressable
-            style={[styles.button, isLoading && { opacity: 0.7 }]}
+            style={[
+              styles.button,
+              { backgroundColor: isDark ? Colors.primaryDark : Colors.primary },
+              isLoading && { opacity: 0.7 }
+            ]}
             onPress={handleSubmit}
             disabled={isLoading}
           >
@@ -227,7 +268,10 @@ const AddForm = ({ showDefault }: { showDefault?: boolean }) => {
 
           {showDefault && (
             <Pressable
-              style={[styles.button, { backgroundColor: "#000" }]}
+              style={[
+                styles.button, 
+                { backgroundColor: isDark ? Colors.darkDark : "#000" }
+              ]}
               onPress={handleAddDefault}
               disabled={isLoading}
             >
@@ -257,7 +301,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontFamily: Fonts.brandBlack,
-    color: Colors.text,
     textAlign: "center",
   },
   formContainer: {
@@ -275,7 +318,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.brand,
   },
   input: {
-    borderColor: Colors.muted,
     borderWidth: 1,
     borderRadius: 5,
     padding: 10,
@@ -286,7 +328,6 @@ const styles = StyleSheet.create({
   },
   switchContainer: {
     flexDirection: "row",
-    backgroundColor: Colors.light,
     borderRadius: 15,
     padding: 5,
     width: "100%",
@@ -303,7 +344,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   button: {
-    backgroundColor: Colors.primary,
     padding: 15,
     borderRadius: 5,
     width: "100%",

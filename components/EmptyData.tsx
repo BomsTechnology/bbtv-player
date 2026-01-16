@@ -1,4 +1,5 @@
 import { Colors, Fonts } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -19,20 +20,41 @@ const EmptyData = ({
   actionLabel,
   onAction,
   iconSize = 64,
-  iconColor = '#ccc',
+  iconColor,
 }: EmptyDataProps) => {
+  const { isDark } = useTheme();
+
+  const resolvedIconColor = iconColor || (isDark ? '#555' : '#ccc');
+
   return (
     <View style={styles.container}>
-      <Ionicons name={icon} size={iconSize} color={iconColor} />
-      
-      <Text style={styles.title}>{title}</Text>
-      
+      <Ionicons name={icon} size={iconSize} color={resolvedIconColor} />
+      <Text 
+        style={[
+          styles.title,
+          { color: isDark ? Colors.textDark : Colors.text }
+        ]}
+      >
+        {title}
+      </Text>
       {description && (
-        <Text style={styles.description}>{description}</Text>
+        <Text 
+          style={[
+            styles.description,
+            { color: isDark ? Colors.mutedDark : Colors.muted }
+          ]}
+        >
+          {description}
+        </Text>
       )}
-      
       {actionLabel && onAction && (
-        <Pressable style={styles.button} onPress={onAction}>
+        <Pressable 
+          style={[
+            styles.button,
+            { backgroundColor: isDark ? Colors.primaryDark : Colors.primary }
+          ]} 
+          onPress={onAction}
+        >
           <Text style={styles.buttonText}>{actionLabel}</Text>
         </Pressable>
       )}
@@ -51,21 +73,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontFamily: Fonts.brandBold,
-    color: Colors.text,
     marginTop: 16,
     textAlign: 'center',
   },
   description: {
     fontSize: 14,
     fontFamily: Fonts.brand,
-    color: Colors.muted,
     marginTop: 8,
     textAlign: 'center',
     lineHeight: 20,
   },
   button: {
     marginTop: 24,
-    backgroundColor: Colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

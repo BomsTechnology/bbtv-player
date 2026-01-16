@@ -3,17 +3,17 @@ import EmptyData from "@/components/EmptyData";
 import SearchInput from "@/components/form/SearchInput";
 import Toast from '@/components/Toast';
 import { Colors, Fonts } from "@/constants/theme";
-import useFavoriteStore from "@/hooks/use-favoritestore";
+import useFavoriteStore, { FavoriteItem } from "@/hooks/use-favoritestore";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useTheme } from "@/hooks/useTheme";
 import { useToast } from '@/hooks/useToast';
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
-import { PlaylistItem } from "iptv-playlist-parser";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 
 export type LayoutItem = { type: "search_bar" | "empty" };
-export type ChannelItem = { type: "channel"; data: PlaylistItem };
+export type ChannelItem = { type: "channel"; data: FavoriteItem };
 export type ChannelListItem = LayoutItem | ChannelItem;
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -21,6 +21,7 @@ const CARD_WIDTH = SCREEN_WIDTH / 3;
 const CARD_HEIGHT = CARD_WIDTH * 1.2;
 
 const FavoriteIndex = () => {
+  const { isDark } = useTheme();
   const router = useRouter();
   const [search, setSearch] = useState("");
   const { showToast, hideToast, toastVisible, toastMessage, toastType } = useToast();
@@ -28,7 +29,7 @@ const FavoriteIndex = () => {
   const { data: favorites } = useFavoriteStore();
 
   const filteredData = useMemo(() => {
-    if (!debouncedSearch.trim()) return favorites.map((favorite) => favorite.channel);
+    if (!debouncedSearch.trim()) return favorites;
     
     const searchLower = debouncedSearch.toLowerCase().trim();
     return favorites.filter((item) =>
@@ -42,75 +43,92 @@ const FavoriteIndex = () => {
 
     const items: ChannelItem[] = (filteredData || []).map((item) => ({
       type: "channel",
-      data: (item as PlaylistItem),
+      data: (item as FavoriteItem),
     }));
 
     return filteredData.length === 0 ? [header, empty] : [header, ...items];
   }, [filteredData]);
 
-  const handleOnPress = (channel: PlaylistItem) => {
-    if(!channel.tvg.id){
+  const handleOnPress = useCallback((item: ChannelItem) => {
+    if (!item.data.channel.tvg.id && !item.data.channel.url) {
       showToast('This channel is not available', 'error');
     } else {
-      router.push(`/(app)/player/${channel.tvg.id}`)
+        router.push(`/(app)/player/undefined?favorite=${item.data.id}`);
     }
-  }
+  }, [showToast, router]);
+
+  const renderItem = useCallback(({ item, index }: { item: ChannelListItem; index: number }) => {
+    if (item.type === "search_bar") {
+      return (
+        <View style={[styles.headerContainer,
+          {
+            backgroundColor: isDark ? Colors.backgroundDark : Colors.background,
+            shadowColor: isDark ? "#fff" : "#000",
+            shadowOpacity: isDark ? 0.1 : 0.25,
+          }]}>
+          <SearchInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search channel..."
+          />
+        </View>
+      );
+    } else if (item.type === "empty") {
+      return (
+        <EmptyData
+          icon="search"
+          title="No channels found"
+          description="Try a different search term"
+        />
+      );
+    }
+    
+    const channelData = (item as ChannelItem);
+    return (
+      <View style={styles.item}>
+        <ChannelCard 
+          channel={channelData.data.channel} 
+          onPress={() => handleOnPress(channelData)} 
+        />
+      </View>
+    );
+  }, [isDark, search, handleOnPress]);
+
+  const keyExtractor = useCallback((item: ChannelListItem, index: number) => {
+    if (item.type === "search_bar") return "header";
+    if (item.type === "empty") return "empty";
+    const channelItem = item as ChannelItem;
+    return channelItem.data.channel.tvg.id || `channel-${index}`;
+  }, []);
+
+  const overrideItemLayout = useCallback((layout: any, item: ChannelListItem) => {
+    if (item.type === "search_bar" || item.type === "empty") {
+      layout.span = 3;// Approximate heights
+    } 
+  }, []);
+
+  const getItemType = useCallback((item: ChannelListItem) => {
+    return item.type;
+  }, []);
+
+  
 
   return (
     <>
       <FlashList
         data={listData}
-        renderItem={({ item, index }) => {
-          if (item.type === "search_bar") {
-            return (
-              <View style={styles.headerContainer}>
-                <SearchInput
-                  value={search}
-                  onChangeText={setSearch}
-                  placeholder="Search favorites..."
-                />
-              </View>
-            );
-          } else if (item.type === "empty") {
-            return (
-              <EmptyData
-                icon={favorites.length === 0 ? "star-outline" : "search"}
-                title={
-                  favorites.length === 0
-                    ? "No favorites yet"
-                    : "No channels found"
-                }
-                description={
-                  favorites.length === 0
-                    ? "Add channels to your favorites to see them here"
-                    : "Try a different search term"
-                }
-              />
-            );
-          }
-          return (
-            <View style={styles.item}>
-              <ChannelCard channel={(item as ChannelItem).data!} onPress={() => handleOnPress((item as ChannelItem).data)} />
-            </View>
-          );
-        }}
-        keyExtractor={(item, index) => {
-          if (item.type === "search_bar") return "header";
-          if (item.type === "empty") return "empty";
-          return `${(item as ChannelItem).data.name}-${index}`;
-        }}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        getItemType={getItemType}
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { backgroundColor: isDark ? Colors.backgroundDark : Colors.gray }]}
         scrollToOverflowEnabled={true}
         stickyHeaderHiddenOnScroll={false}
         numColumns={3}
-        overrideItemLayout={(layout, item) => {
-          if (item.type === "search_bar" || item.type === "empty") {
-            layout.span = 3;
-          }
-        }}
+        overrideItemLayout={overrideItemLayout}
         stickyHeaderIndices={[0]}
+        drawDistance={CARD_HEIGHT * 6}
       />
       <Toast
         message={toastMessage}

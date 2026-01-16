@@ -1,8 +1,10 @@
-import { Colors, Fonts } from '@/constants/theme'
-import { Stack } from 'expo-router'
-import React from 'react'
+import { Colors, Fonts } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { Stack } from 'expo-router';
+import React from 'react';
 
 const FavoriteLayout = () => {
+  const { isDark } = useTheme();
   return (
     <Stack
       screenOptions={{
@@ -12,19 +14,23 @@ const FavoriteLayout = () => {
         },
         headerBackVisible: false,
         contentStyle: {
-          backgroundColor: Colors.gray,
+          backgroundColor: isDark ? Colors.backgroundDark : Colors.gray,
         },
-        headerBlurEffect: "regular",
+        headerBlurEffect: isDark ? "dark" : "regular",
         headerLargeTitleStyle: {
           fontFamily: Fonts.brandBlack,
-          color: Colors.primary,
+          color: isDark ? Colors.primaryDark : Colors.primary,
         },
         headerTitleStyle: {
           fontFamily: Fonts.brandBlack,
-          color: Colors.primary,
+          color: isDark ? Colors.primaryDark : Colors.primary,
         },
         headerLargeTitleEnabled: true,
         headerTransparent: false,
+        headerStyle: {
+          backgroundColor: isDark ? Colors.backgroundDark : Colors.background,
+        },
+        headerTintColor: isDark ? Colors.textDark : Colors.text
       }}
     >
       <Stack.Screen

@@ -1,7 +1,9 @@
 import { Colors, Fonts } from "@/constants/theme";
+import { useTheme } from "@/hooks/useTheme";
 import { Stack } from "expo-router";
 
 const HomeLayout = () => {
+  const { isDark } = useTheme();
   return (
     <Stack
       screenOptions={{
@@ -11,19 +13,23 @@ const HomeLayout = () => {
         },
         headerBackVisible: false,
         contentStyle: {
-          backgroundColor: Colors.gray,
+          backgroundColor: isDark ? Colors.backgroundDark : Colors.gray,
         },
-        headerBlurEffect: "regular",
+        headerBlurEffect: isDark ? "dark" : "regular",
         headerLargeTitleStyle: {
           fontFamily: Fonts.brandBlack,
-          color: Colors.primary,
+          color: isDark ? Colors.primaryDark : Colors.primary,
         },
         headerTitleStyle: {
           fontFamily: Fonts.brandBlack,
-          color: Colors.primary,
+          color: isDark ? Colors.primaryDark : Colors.primary,
         },
         headerLargeTitleEnabled: true,
         headerTransparent: false,
+        headerStyle: {
+          backgroundColor: isDark ? Colors.backgroundDark : Colors.background,
+        },
+        headerTintColor: isDark ? Colors.textDark : Colors.text
       }}
     >
       <Stack.Screen
@@ -33,15 +39,15 @@ const HomeLayout = () => {
         }}
       />
       <Stack.Screen
-        name="category/index"
+        name="category/channel/[categoryId]"
         options={{
-          headerTitle: "Categories",
+          headerTitle: "Channels",
         }}
       />
       <Stack.Screen
-        name="category/[id]"
+        name="category/[playlistId]"
         options={{
-          headerTitle: "Channels",
+          headerTitle: "Categories",
         }}
       />
       <Stack.Screen

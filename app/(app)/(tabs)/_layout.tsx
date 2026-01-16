@@ -1,17 +1,23 @@
 import { Colors, Fonts } from "@/constants/theme";
+import { useTheme } from "@/hooks/useTheme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
 
 
-
 const TabLayout = () => {
+  const { isDark } = useTheme();
   return (
     <Tabs
       screenOptions={{
+        tabBarStyle: {
+          backgroundColor: isDark ? Colors.backgroundDark : Colors.background,
+          borderTopWidth:0,
+          paddingTop: 10,
+        },
         tabBarLabelStyle: {
           fontSize: 9,
           fontWeight: "600",
-          color: Colors.primary,
+          color: isDark ? Colors.primaryDark : Colors.primary,
           fontFamily: Fonts.brand,
         },
       }}
@@ -24,7 +30,7 @@ const TabLayout = () => {
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
-              color={Colors.primary}
+              color={isDark ? Colors.primaryDark : Colors.primary}
               size={size}
             />
           ),
@@ -38,7 +44,7 @@ const TabLayout = () => {
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "star" : "star-outline"}
-              color={Colors.primary}
+              color={isDark ? Colors.primaryDark : Colors.primary}
               size={size}
             />
           ),
@@ -52,7 +58,7 @@ const TabLayout = () => {
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "settings" : "settings-outline"}
-              color={Colors.primary}
+              color={isDark ? Colors.primaryDark : Colors.primary}
               size={size}
             />
           ),

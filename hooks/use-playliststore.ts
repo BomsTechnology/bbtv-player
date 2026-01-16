@@ -14,6 +14,7 @@ export interface PlayListStore {
     addPlaylist: (playlist: MyCustomPlaylist) => void,
     removePlaylist: (id: string) => void,
     getSelectedChannel: (id: string) => PlaylistItem,
+    getSelectedChannelByUrl: (url: string) => PlaylistItem,
     getPlaylist: (id: string) => MyCustomPlaylist,
     updatePlaylist: (id: string, playlist: MyCustomPlaylist) => void,
 }
@@ -38,6 +39,13 @@ export const usePlaylistStore = create<PlayListStore>()(
             },
             getSelectedChannel: (id: string) => {
                 return get().selectedPlaylist!.items[0].items?.find((item) => item.tvg.id === id)!;
+            },
+            getSelectedChannelByUrl: (url: string) => {
+                const targetUrl = new URL(url);
+                return get().selectedPlaylist!.items[0].items?.find((item) => {
+                    const itemUrl = new URL(item.url);
+                    return itemUrl.origin + itemUrl.pathname === targetUrl.origin + targetUrl.pathname;
+                })!;
             },
             getPlaylist: (id: string) => {
                 return get().data.find((playlist) => playlist.id === id)!;
