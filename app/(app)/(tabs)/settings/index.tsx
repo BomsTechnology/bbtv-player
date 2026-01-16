@@ -2,6 +2,7 @@ import { Colors, Fonts } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import * as Linking from "expo-linking";
+import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 interface SettingItemProps {
@@ -17,6 +18,7 @@ interface SectionHeaderProps {
 }
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { showActionSheetWithOptions } = useActionSheet();
   const { userTheme, isDark, setTheme } = useTheme();
   
@@ -132,7 +134,7 @@ export default function SettingsScreen() {
         icon="❓"
         title="FAQ"
         subtitle="Frequently Asked Questions"
-        onPress={() => null}
+        onPress={() => router.push("/(app)/(tabs)/settings/faq")}
         rightComponent={
           <Text style={[
             styles.arrow,
