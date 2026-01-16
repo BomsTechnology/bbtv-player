@@ -2,8 +2,8 @@ import { Colors, Fonts } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 import { MyCustomPlaylist } from "@/types/playlistType";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Link, useRouter } from "expo-router";
-import { memo, useCallback } from "react";
+import { Link } from "expo-router";
+import { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface PlaylistCardProps {
@@ -23,17 +23,8 @@ const PlaylistCard = ({
   createDate,
   handleDelete,
 }: PlaylistCardProps) => {
-  const router = useRouter();
   const { isDark } = useTheme();
   const channelCount = playlist.items[0]?.items?.length || 0;
-
-  const handlePress = useCallback(() => {
-    router.prefetch(`/(app)/(tabs)/home/category/${playlist.id}`);
-    router.push({
-      pathname: "/(app)/(tabs)/home/category/[playlistId]",
-      params: { playlistId: playlist.id },
-    });
-  }, [playlist.id, router]);
 
   return (
     <View style={[
@@ -50,8 +41,8 @@ const PlaylistCard = ({
           params: { playlistId: playlist.id },
         }}
         asChild
-      ></Link>
-        <Pressable style={styles.middleBlock} onPress={handlePress} unstable_pressDelay={0}>
+      >
+        <Pressable style={styles.middleBlock}>
           <Text style={[
             styles.title,
             { color: isDark ? Colors.textDark : Colors.text }
@@ -75,7 +66,7 @@ const PlaylistCard = ({
             </Text>
           )}
         </Pressable>
-      
+      </Link>
       <View style={styles.rightBlock}>
         {playlist.type === "url" && (
           <Pressable 
