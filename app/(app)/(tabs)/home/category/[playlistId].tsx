@@ -9,7 +9,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { CategoryList } from "@/types/playlistType";
 import { FlashList } from "@shopify/flash-list";
 import { useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   StyleSheet,
   View
@@ -29,12 +29,11 @@ const { playlistId } = useLocalSearchParams<{
   const debouncedSearch = useDebounce(search, 300);
   const { getPlaylist, setSelectedPlaylist } = usePlaylistStore();
   
-  useEffect(() => {
-      const playlistData = getPlaylist(playlistId);
-      if (playlistData) {
-        setSelectedPlaylist(playlistData);
+ const  handleOnLayout = () => {
+      if (data) {
+        setSelectedPlaylist(data);
       }
-  }, [getPlaylist, playlistId, setSelectedPlaylist]);
+  };
 
   const data = useMemo(() => getPlaylist(playlistId), [playlistId, getPlaylist]);
 
@@ -124,6 +123,7 @@ const { playlistId } = useLocalSearchParams<{
         stickyHeaderHiddenOnScroll={false}
         overrideItemLayout={overrideItemLayout}
         stickyHeaderIndices={[0]}
+        onLayout={handleOnLayout}
       />
   )
 }

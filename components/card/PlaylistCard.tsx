@@ -28,9 +28,7 @@ const PlaylistCard = ({
   const channelCount = playlist.items[0]?.items?.length || 0;
 
   const handlePress = useCallback(() => {
-    // Précharger juste avant la navigation (sans latence ajoutée)
     router.prefetch(`/(app)/(tabs)/home/category/${playlist.id}`);
-    // Navigation immédiate après
     router.push({
       pathname: "/(app)/(tabs)/home/category/[playlistId]",
       params: { playlistId: playlist.id },
